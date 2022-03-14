@@ -6,5 +6,6 @@ Adds a toggle button to the editor toolbar which allows enabling or disabling Mo
 
 ### Installation:
 
-1. Move the `Mono-Build-Toggler` folder to the `addons` folder within your project directory (`res://addons/Mono-Build-Toggler`)
-2. Enable the plugin from the `plugins` tab of the Godot editor project settings
+1. Clone or download the repository
+2. Move the `Mono-Build-Toggler` folder to the `addons` folder within your project directory (`res://addons/Mono-Build-Toggler`)
+3. Enable the plugin from the `plugins` tab of the Godot editor project settings
