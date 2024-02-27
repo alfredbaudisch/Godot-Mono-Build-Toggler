@@ -2,7 +2,7 @@
 
 Adds a toggle button to the editor toolbar which allows enabling or disabling Mono build by hiding the project's solution file. Useful for projects which use both C# and another language like GDScript, so that you can disable Mono while you're not editing any C# source files.
 
-<img src="screenshot_01.png" style="zoom:150%;" align="left" /> <br /> <br />
+<img src="screenshot_godot4.png" />
 
 ### Installation
 
