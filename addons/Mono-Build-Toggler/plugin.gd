@@ -1,55 +1,68 @@
-tool
+@tool
 extends EditorPlugin
 
+const DisabledExt = "disabled"
+
 var scene: Node
-var SOLUTION_PATH: String
-var SOLUTION_PATH_HIDDEN: String
+var solution_path: String
+var solution_path_hidden: String
+var csproj_path: String
+var csproj_path_hidden: String
+
+var toggler = preload("res://addons/Mono-Build-Toggler/toggler.tscn")
+
 
 func _enter_tree():
+	var proj_name := ProjectSettings.get("application/config/name")
+	solution_path = "res://" + proj_name + ".sln"
+	solution_path_hidden = "res://" + proj_name + ".sln." + DisabledExt
 	
-	SOLUTION_PATH = "res://" + ProjectSettings.get("application/config/name") + ".sln"
-	SOLUTION_PATH_HIDDEN = "res://" + ProjectSettings.get("application/config/name") + ".sln.disabled" # Change this value to customise the hidden file's name
+	csproj_path = "res://" + proj_name + ".csproj"
+	csproj_path_hidden = "res://" + proj_name + ".csproj." + DisabledExt
 	
-	scene = preload("toggler.tscn").instance()
-	scene.connect("TOGGLED", self, "_on_mono_toggled")
+	scene = toggler.instantiate() as MonoBuildToggler
+	scene.TOGGLED.connect(_on_mono_toggled)
 	
 	add_control_to_container(CONTAINER_TOOLBAR, scene)
 	
-	# Set toggle button initial status
-	var file: File = File.new()
-	if file.file_exists(SOLUTION_PATH):
+	# Set toggle button initial status	
+	if FileAccess.file_exists(solution_path):
 		scene.set_enabled(true)
-	elif file.file_exists(SOLUTION_PATH_HIDDEN):
+	elif FileAccess.file_exists(solution_path_hidden):
 		scene.set_enabled(false)
 	else:
-		push_error("No solution file exists at path '" + SOLUTION_PATH + "' or '" + SOLUTION_PATH_HIDDEN + "'")
+		push_error("No solution file exists at path '" + solution_path + "' or '" + solution_path_hidden + "'")
+
 
 func _on_mono_toggled(enabled: bool):
-	var dir: Directory = Directory.new()
 	if not enabled:
-		if dir.file_exists(SOLUTION_PATH):
-			# Hide solution file
-			var error: int = dir.rename(SOLUTION_PATH, SOLUTION_PATH_HIDDEN)
+		if FileAccess.file_exists(solution_path):
+			# Hide solution file			
+			var error: Error = DirAccess.rename_absolute(solution_path, solution_path_hidden)
 			if error != OK:
 				push_error("An error occurred while renaming the solution file: " + str(error))
 				return
-		elif not dir.file_exists(SOLUTION_PATH_HIDDEN):
-			push_error("No solution file exists at path '" + SOLUTION_PATH + "' or '" + SOLUTION_PATH_HIDDEN + "'")
+			DirAccess.rename_absolute(csproj_path, csproj_path_hidden)
+		elif not FileAccess.file_exists(solution_path_hidden):
+			push_error("No solution file exists at path '" + solution_path + "' or '" + solution_path_hidden + "'")
 	else:
-		if dir.file_exists(SOLUTION_PATH_HIDDEN):
+		if FileAccess.file_exists(solution_path_hidden):
 			# Show solution file
-			var error: int = dir.rename(SOLUTION_PATH_HIDDEN, SOLUTION_PATH)
+			var error: Error = DirAccess.rename_absolute(solution_path_hidden, solution_path)
 			if error != OK:
 				push_error("An error occurred while renaming the solution file: " + str(error))
-				return
-		elif not dir.file_exists(SOLUTION_PATH):
-			push_error("No solution file exists at path '" + SOLUTION_PATH + "' or '" + SOLUTION_PATH_HIDDEN + "'")
+				return				
+			DirAccess.rename_absolute(csproj_path_hidden, csproj_path)
+		elif not FileAccess.file_exists(solution_path):
+			push_error("No solution file exists at path '" + solution_path + "' or '" + solution_path_hidden + "'")
+
 
 func _exit_tree():
 	remove_control_from_container(CONTAINER_TOOLBAR, scene)
-	scene.free()
 
 	# Enable solution if disabled
-	var dir: Directory = Directory.new()
-	if dir.file_exists(SOLUTION_PATH_HIDDEN):
-		dir.rename(SOLUTION_PATH_HIDDEN, SOLUTION_PATH)
+	if solution_path_hidden and FileAccess.file_exists(solution_path_hidden):
+		DirAccess.rename_absolute(solution_path_hidden, solution_path)
+		
+	if csproj_path_hidden and FileAccess.file_exists(csproj_path_hidden):
+		DirAccess.rename_absolute(csproj_path_hidden, csproj_path)
