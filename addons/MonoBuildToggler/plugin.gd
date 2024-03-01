@@ -9,7 +9,7 @@ var solution_path_hidden: String
 var csproj_path: String
 var csproj_path_hidden: String
 
-var toggler = preload("res://addons/Mono-Build-Toggler/toggler.tscn")
+var toggler = preload("res://addons/MonoBuildToggler/toggler.tscn")
 
 
 func _enter_tree():
