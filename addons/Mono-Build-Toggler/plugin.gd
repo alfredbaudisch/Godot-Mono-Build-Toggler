@@ -21,7 +21,7 @@ func _enter_tree():
 	csproj_path_hidden = "res://" + proj_name + ".csproj." + DisabledExt
 	
 	scene = toggler.instantiate() as MonoBuildToggler
-	scene.TOGGLED.connect(_on_mono_toggled)
+	scene.on_toggled.connect(_on_mono_toggled)
 	
 	add_control_to_container(CONTAINER_TOOLBAR, scene)
 	

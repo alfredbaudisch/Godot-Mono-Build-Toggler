@@ -1,6 +1,7 @@
 [gd_scene load_steps=2 format=3 uid="uid://dqtpjvdmenyxm"]
 
-[ext_resource type="Script" path="res://addons/Mono-Build-Toggler/toggler.gd" id="1"]
+[ext_resource type="Script" path="res://addons/MonoBuildToggler/toggler.gd" id="1"]
+
 
 [node name="HBoxContainer" type="HBoxContainer"]
 offset_right = 40.0
