@@ -1,68 +1,44 @@
 @tool
 extends EditorPlugin
 
-const DisabledExt = "disabled"
+var button : Button
 
-var scene: Node
-var solution_path: String
-var solution_path_hidden: String
-var csproj_path: String
-var csproj_path_hidden: String
-
-var toggler = preload("res://addons/MonoBuildToggler/toggler.tscn")
-
-
-func _enter_tree():
-	var proj_name := ProjectSettings.get("application/config/name")
-	solution_path = "res://" + proj_name + ".sln"
-	solution_path_hidden = "res://" + proj_name + ".sln." + DisabledExt
-	
-	csproj_path = "res://" + proj_name + ".csproj"
-	csproj_path_hidden = "res://" + proj_name + ".csproj." + DisabledExt
-	
-	scene = toggler.instantiate() as MonoBuildToggler
-	scene.on_toggled.connect(_on_mono_toggled)
-	
-	add_control_to_container(CONTAINER_TOOLBAR, scene)
-	
-	# Set toggle button initial status	
-	if FileAccess.file_exists(solution_path):
-		scene.set_enabled(true)
-	elif FileAccess.file_exists(solution_path_hidden):
-		scene.set_enabled(false)
-	else:
-		push_error("No solution file exists at path '" + solution_path + "' or '" + solution_path_hidden + "'")
+func _enter_tree() -> void:
+	# Create a decent button.
+	button = Button.new()
+	button.focus_mode = Control.FOCUS_NONE
+	button.icon = get_editor_interface().get_editor_theme().get_icon("PlayStart", "EditorIcons")
+	button.shortcut = __create_shortcut(KEY_F5, true)
+	button.shortcut_in_tooltip = false
+	button.tooltip_text = "\n".join([
+		"Fast Run Project (%s)" % button.shortcut.get_as_text(),
+		"Run the project without rebuilding."
+	])
+	# Add it to the container.
+	add_control_to_container(EditorPlugin.CONTAINER_TOOLBAR, button)
+	# Bind an actual action to the button.
+	button.pressed.connect(__when_button_pressed)
 
 
-func _on_mono_toggled(enabled: bool):
-	if not enabled:
-		if FileAccess.file_exists(solution_path):
-			# Hide solution file			
-			var error: Error = DirAccess.rename_absolute(solution_path, solution_path_hidden)
-			if error != OK:
-				push_error("An error occurred while renaming the solution file: " + str(error))
-				return
-			DirAccess.rename_absolute(csproj_path, csproj_path_hidden)
-		elif not FileAccess.file_exists(solution_path_hidden):
-			push_error("No solution file exists at path '" + solution_path + "' or '" + solution_path_hidden + "'")
-	else:
-		if FileAccess.file_exists(solution_path_hidden):
-			# Show solution file
-			var error: Error = DirAccess.rename_absolute(solution_path_hidden, solution_path)
-			if error != OK:
-				push_error("An error occurred while renaming the solution file: " + str(error))
-				return				
-			DirAccess.rename_absolute(csproj_path_hidden, csproj_path)
-		elif not FileAccess.file_exists(solution_path):
-			push_error("No solution file exists at path '" + solution_path + "' or '" + solution_path_hidden + "'")
+func _exit_tree() -> void:
+	if button == null:
+		return
+	# Tear everything down.
+	remove_control_from_container(EditorPlugin.CONTAINER_TOOLBAR, button)
+	button.free()
+	button = null
 
 
-func _exit_tree():
-	remove_control_from_container(CONTAINER_TOOLBAR, scene)
+func __when_button_pressed() -> void:
+	get_editor_interface().save_all_scenes()
+	OS.create_process(OS.get_executable_path(), ["--path", ProjectSettings.globalize_path("res://")])
 
-	# Enable solution if disabled
-	if solution_path_hidden and FileAccess.file_exists(solution_path_hidden):
-		DirAccess.rename_absolute(solution_path_hidden, solution_path)
-		
-	if csproj_path_hidden and FileAccess.file_exists(csproj_path_hidden):
-		DirAccess.rename_absolute(csproj_path_hidden, csproj_path)
+
+func __create_shortcut(keycode : Key, shift_pressed : bool) -> Shortcut:
+	var ev := InputEventKey.new()
+	ev.pressed = true
+	ev.shift_pressed = shift_pressed
+	ev.keycode = keycode
+	var shortcut := Shortcut.new()
+	shortcut.events.append(ev)
+	return shortcut
